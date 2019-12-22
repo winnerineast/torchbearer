@@ -1,16 +1,28 @@
 import unittest
-from unittest.mock import Mock
+from mock import Mock
 
-from torchbearer.metrics import MetricFactory, MetricList, Metric, MetricTree, AdvancedMetric
-
-
-class TestMetricFactory(unittest.TestCase):
-    def test_empty_build(self):
-        factory = MetricFactory()
-        self.assertTrue(factory.build() is None)
+from torchbearer.metrics import MetricList, Metric, MetricTree, AdvancedMetric
 
 
 class TestMetricTree(unittest.TestCase):
+    def test_dict_return(self):
+        root = Metric('test')
+        root.process = Mock(return_value={0: 'test', 1: 'something else'})
+        leaf1 = Metric('test')
+        leaf1.process = Mock(return_value={'test': 10})
+        leaf2 = Metric('test')
+        leaf2.process = Mock(return_value=None)
+
+        tree = MetricTree(root)
+        tree.add_child(leaf1)
+        tree.add_child(leaf2)
+
+        self.assertTrue(tree.process('args') == {'test': 10})
+
+        root.process.assert_called_once_with('args')
+        leaf1.process.assert_called_once_with('test')
+        leaf2.process.assert_called_once_with('test')
+
     def test_process(self):
         root = Metric('test')
         root.process = Mock(return_value='test')
@@ -57,8 +69,9 @@ class TestMetricTree(unittest.TestCase):
         tree.add_child(leaf)
 
         tree.train()
-        root.train.assert_called_once()
-        leaf.train.assert_called_once()
+
+        self.assertEqual(root.train.call_count, 1)
+        self.assertEqual(leaf.train.call_count, 1)
 
     def test_eval(self):
         root = Metric('test')
@@ -70,8 +83,9 @@ class TestMetricTree(unittest.TestCase):
         tree.add_child(leaf)
 
         tree.eval()
-        root.eval.assert_called_once()
-        leaf.eval.assert_called_once()
+
+        self.assertEqual(root.eval.call_count, 1)
+        self.assertEqual(leaf.eval.call_count, 1)
 
     def test_reset(self):
         root = Metric('test')
@@ -85,6 +99,11 @@ class TestMetricTree(unittest.TestCase):
         tree.reset({})
         root.reset.assert_called_once_with({})
         leaf.reset.assert_called_once_with({})
+
+    def test_string(self):
+        root = Metric('test')
+        tree = MetricTree(root)
+        self.assertEqual(str(root), str(tree))
 
 
 class TestMetricList(unittest.TestCase):
@@ -126,14 +145,14 @@ class TestMetricList(unittest.TestCase):
         my_mock.train = Mock(return_value=None)
         metric = MetricList([my_mock])
         metric.train()
-        my_mock.train.assert_called_once()
+        self.assertEqual(my_mock.train.call_count, 1)
 
     def test_eval(self):
         my_mock = Metric('test')
         my_mock.eval = Mock(return_value=None)
         metric = MetricList([my_mock])
         metric.eval()
-        my_mock.eval.assert_called_once()
+        self.assertEqual(my_mock.eval.call_count, 1)
 
     def test_reset(self):
         my_mock = Metric('test')

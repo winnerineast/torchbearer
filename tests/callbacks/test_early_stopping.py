@@ -1,11 +1,22 @@
 from unittest import TestCase
+from mock import MagicMock
 
 import torchbearer
 from torchbearer.callbacks import EarlyStopping
 
 
 class TestEarlyStopping(TestCase):
-    
+    def test_step_on_batch(self):
+        stopper = EarlyStopping(monitor='test_metric', mode='min', step_on_batch=True)
+
+        stopper.step = MagicMock()
+
+        stopper.on_step_training('test')
+        self.assertTrue(stopper.step.call_count == 1)
+
+        stopper.on_end_epoch('test')
+        self.assertTrue(stopper.step.call_count == 1)
+
     def test_min_should_stop(self):
         state = {
             torchbearer.EPOCH: 1,
@@ -150,7 +161,7 @@ class TestEarlyStopping(TestCase):
 
         for i in range(3):
             stopper.on_end_epoch(state)
-            self.assertFalse(state['stop_training'])
+            self.assertFalse(state[torchbearer.STOP_TRAINING])
 
         state[torchbearer.METRICS]['test_metric'] = 0.0001
         stopper.on_end_epoch(state)
@@ -261,3 +272,16 @@ class TestEarlyStopping(TestCase):
         stopper.on_end_epoch(state)
 
         self.assertTrue(state[torchbearer.STOP_TRAINING])
+
+    def test_state_dict(self):
+        stopper = EarlyStopping(monitor='test_metric_1')
+        stopper.wait = 10
+        stopper.best = 20
+        state = stopper.state_dict()
+
+        stopper = EarlyStopping(monitor='test_metric_1')
+        self.assertNotEqual(stopper.wait, 10)
+
+        stopper.load_state_dict(state)
+        self.assertEqual(stopper.wait, 10)
+        self.assertEqual(stopper.best, 20)

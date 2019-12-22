@@ -34,6 +34,20 @@ class TorchScheduler(Callback):
 
 class LambdaLR(TorchScheduler):
     """
+    Example: ::
+
+        >>> from torchbearer import Trial
+        >>> from torchbearer.callbacks import LambdaLR
+
+        # Example Trial which performs the two learning rate lambdas from the PyTorch docs
+        >>> lambda1 = lambda epoch: epoch // 30
+        >>> lambda2 = lambda epoch: 0.95 ** epoch
+        >>> scheduler = LambdaLR(lr_lambda=[lambda1, lambda2])
+        >>> trial = Trial(None, callbacks=[scheduler], metrics=['loss'], verbose=2).for_steps(10).run(1)
+
+    Args:
+        step_on_batch (bool): If True, step will be called on each training iteration rather than on each epoch
+
     See:
         `PyTorch LambdaLR <http://pytorch.org/docs/master/optim.html#torch.optim.lr_scheduler.LambdaLR>`_
     """
@@ -45,6 +59,21 @@ class LambdaLR(TorchScheduler):
 
 class StepLR(TorchScheduler):
     """
+    Example: ::
+
+        >>> from torchbearer import Trial
+        >>> from torchbearer.callbacks import StepLR
+
+        >>> # Assuming optimizer uses lr = 0.05 for all groups
+        >>> # lr = 0.05     if epoch < 30
+        >>> # lr = 0.005    if 30 <= epoch < 60
+        >>> # lr = 0.0005   if 60 <= epoch < 90
+        >>> scheduler = StepLR(step_size=30, gamma=0.1)
+        >>> trial = Trial(None, callbacks=[scheduler], metrics=['loss'], verbose=2).for_steps(10).run(1)
+
+    Args:
+        step_on_batch (bool): If True, step will be called on each training iteration rather than on each epoch
+
     See:
         `PyTorch StepLR <http://pytorch.org/docs/master/optim.html#torch.optim.lr_scheduler.StepLR>`_
     """
@@ -57,6 +86,21 @@ class StepLR(TorchScheduler):
 
 class MultiStepLR(TorchScheduler):
     """
+    Example: ::
+
+        >>> from torchbearer import Trial
+        >>> from torchbearer.callbacks import MultiStepLR
+
+        >>> # Assuming optimizer uses lr = 0.05 for all groups
+        >>> # lr = 0.05     if epoch < 30
+        >>> # lr = 0.005    if 30 <= epoch < 80
+        >>> # lr = 0.0005   if epoch >= 80
+        >>> scheduler = MultiStepLR(milestones=[30,80], gamma=0.1)
+        >>> trial = Trial(None, callbacks=[scheduler], metrics=['loss'], verbose=2).for_steps(10).run(1)
+
+    Args:
+        step_on_batch (bool): If True, step will be called on each training iteration rather than on each epoch
+
     See:
         `PyTorch MultiStepLR <http://pytorch.org/docs/master/optim.html#torch.optim.lr_scheduler.MultiStepLR>`_
     """
@@ -69,6 +113,18 @@ class MultiStepLR(TorchScheduler):
 
 class ExponentialLR(TorchScheduler):
     """
+    Example: ::
+
+        >>> from torchbearer import Trial
+        >>> from torchbearer.callbacks import ExponentialLR
+
+        >>> # Example scheduler which multiplies the learning rate by 0.1 every epoch
+        >>> scheduler = ExponentialLR(gamma=0.1)
+        >>> trial = Trial(None, callbacks=[scheduler], metrics=['loss'], verbose=2).for_steps(10).run(1)
+
+    Args:
+        step_on_batch (bool): If True, step will be called on each training iteration rather than on each epoch
+
     See:
         `PyTorch ExponentialLR <http://pytorch.org/docs/master/optim.html#torch.optim.lr_scheduler.ExponentialLR>`_
     """
@@ -80,6 +136,18 @@ class ExponentialLR(TorchScheduler):
 
 class CosineAnnealingLR(TorchScheduler):
     """
+    Example: ::
+
+        >>> from torchbearer import Trial
+        >>> from torchbearer.callbacks import CosineAnnealingLR
+
+        >>> # Example scheduler which uses cosine learning rate annealing - see PyTorch docs
+        >>> scheduler = MultiStepLR(milestones=[30,80], gamma=0.1)
+        >>> trial = Trial(None, callbacks=[scheduler], metrics=['loss'], verbose=2).for_steps(10).run(1)
+
+    Args:
+        step_on_batch (bool): If True, step will be called on each training iteration rather than on each epoch
+
     See:
         `PyTorch CosineAnnealingLR <http://pytorch.org/docs/master/optim.html#torch.optim.lr_scheduler.CosineAnnealingLR>`_
     """
@@ -92,8 +160,19 @@ class CosineAnnealingLR(TorchScheduler):
 
 class ReduceLROnPlateau(TorchScheduler):
     """
-    :param monitor: The quantity to monitor. (Default value = 'val_loss')
-    :type monitor: str
+    Example: ::
+
+        >>> from torchbearer import Trial
+        >>> from torchbearer.callbacks import ReduceLROnPlateau
+
+        >>> # Example scheduler which divides the learning rate by 10 on plateaus of 5 epochs without significant
+        >>> # validation loss decrease, in order to stop overshooting the local minima. new_lr = lr * factor
+        >>> scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5)
+        >>> trial = Trial(None, callbacks=[scheduler], metrics=['loss'], verbose=2).for_steps(10).for_val_steps(10).run(1)
+
+    Args:
+        monitor (str): The name of the quantity in metrics to monitor. (Default value = 'val_loss')
+        step_on_batch (bool): If True, step will be called on each training iteration rather than on each epoch
 
     See:
         `PyTorch ReduceLROnPlateau <http://pytorch.org/docs/master/optim.html#torch.optim.lr_scheduler.ReduceLROnPlateau>`_
@@ -106,3 +185,40 @@ class ReduceLROnPlateau(TorchScheduler):
                                                     threshold=threshold, threshold_mode=threshold_mode,
                                                     cooldown=cooldown, min_lr=min_lr, eps=eps), monitor=monitor,
                                                 step_on_batch=step_on_batch)
+
+
+class CyclicLR(TorchScheduler):
+    """
+    Example: ::
+
+        >>> from torchbearer import Trial
+        >>> from torchbearer.callbacks import CyclicLR
+
+        >>> # Example scheduler which cycles the learning rate between 0.01 and 0.1
+        >>> scheduler = CyclicLR(0.01, 0.1)
+        >>> trial = Trial(None, callbacks=[scheduler], metrics=['loss'], verbose=2).for_steps(10).for_val_steps(10).run(1)
+
+    Args:
+        monitor (str): The name of the quantity in metrics to monitor. (Default value = 'val_loss')
+        step_on_batch (bool): If True, step will be called on each training iteration rather than on each epoch
+
+    See:
+        `PyTorch ReduceLROnPlateau <http://pytorch.org/docs/master/optim.html#torch.optim.lr_scheduler.ReduceLROnPlateau>`_
+    """
+    def __init__(self,  base_lr, max_lr, monitor='val_loss', step_size_up=2000, step_size_down=None, mode='triangular',
+                 gamma=1., scale_fn=None, scale_mode='cycle', cycle_momentum=True, base_momentum=0.8, max_momentum=0.9,
+                 last_epoch=-1, step_on_batch=False):
+        from distutils.version import LooseVersion
+        version = torch.__version__ if str(torch.__version__) is torch.__version__ else "0.4.0"
+        if LooseVersion(version) > LooseVersion("1.0.0"):  # CyclicLR is implemented
+            super(CyclicLR, self).__init__(lambda opt:
+                                                    torch.optim.lr_scheduler.CyclicLR(
+                                                        opt, base_lr, max_lr, step_size_up=step_size_up,
+                                                        step_size_down=step_size_down, mode=mode, gamma=gamma,
+                                                        scale_fn=scale_fn, scale_mode=scale_mode,
+                                                        cycle_momentum=cycle_momentum, base_momentum=base_momentum,
+                                                        max_momentum=max_momentum, last_epoch=last_epoch),
+                                           monitor=monitor, step_on_batch=step_on_batch)
+        else:
+            raise NotImplementedError('CyclicLR scheduler was not implemented in PyTorch versions less than 1.1.0. '
+                                      'Update PyTorch or use the CyclicLR callback from an older Torchbearer version.')

@@ -1,8 +1,9 @@
 from unittest import TestCase
-from unittest.mock import Mock, MagicMock, patch
 
-from torchbearer.metrics.timer import TimerMetric, _TimerMetric
+from mock import Mock, MagicMock, patch
+
 import torchbearer
+from torchbearer.metrics.timer import TimerMetric, _TimerMetric
 
 
 class TestTimer(TestCase):

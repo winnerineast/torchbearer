@@ -11,17 +11,12 @@ Welcome to torchbearer's documentation!
    :maxdepth: 1
    :caption: Notes
 
-   notes/*
-
-.. toctree::
-   :glob:
-   :maxdepth: 1
-   :caption: Examples
-
-   examples/quickstart
-   examples/vae
-   examples/gan
-   examples/basic_opt
+   notes/trial
+   notes/metrics
+   notes/callbacks
+   notes/distributed
+   notes/tensorboard
+   notes/visdom
 
 .. toctree::
    :glob:

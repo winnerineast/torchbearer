@@ -1,5 +1,5 @@
 from unittest import TestCase
-from unittest.mock import patch, mock_open
+from mock import patch, mock_open
 
 import torchbearer
 from torchbearer.callbacks import CSVLogger
@@ -7,7 +7,7 @@ from torchbearer.callbacks import CSVLogger
 
 class TestCSVLogger(TestCase):
 
-    @patch("builtins.open", new_callable=mock_open)
+    @patch("torchbearer.callbacks.csv_logger.open", new_callable=mock_open)
     def test_write_header(self, mock_open):
         state = {
             torchbearer.EPOCH: 0,
@@ -21,9 +21,12 @@ class TestCSVLogger(TestCase):
         logger.on_end_epoch(state)
         logger.on_end(state)
 
-        self.assertTrue(mock_open.mock_calls[1][1][0] == 'epoch,test_metric_1,test_metric_2\r\n')
+        header = mock_open.mock_calls[1][1][0]
+        self.assertTrue('epoch' in header)
+        self.assertTrue('test_metric_1' in header)
+        self.assertTrue('test_metric_2' in header)
 
-    @patch("builtins.open", new_callable=mock_open)
+    @patch("torchbearer.callbacks.csv_logger.open", new_callable=mock_open)
     def test_write_no_header(self, mock_open):
         state = {
             torchbearer.EPOCH: 0,
@@ -37,9 +40,12 @@ class TestCSVLogger(TestCase):
         logger.on_end_epoch(state)
         logger.on_end(state)
 
-        self.assertFalse(mock_open.mock_calls[1][1][0] == 'epoch,test_metric_1,test_metric_2\r\n')
+        header = mock_open.mock_calls[1][1][0]
+        self.assertTrue('epoch' not in header)
+        self.assertTrue('test_metric_1' not in header)
+        self.assertTrue('test_metric_2' not in header)
 
-    @patch("builtins.open", new_callable=mock_open)
+    @patch("torchbearer.callbacks.csv_logger.open", new_callable=mock_open)
     def test_csv_closed(self, mock_open):
         state = {
             torchbearer.EPOCH: 0,
@@ -55,7 +61,7 @@ class TestCSVLogger(TestCase):
 
         self.assertTrue(mock_open.return_value.close.called)
 
-    @patch("builtins.open", new_callable=mock_open)
+    @patch("torchbearer.callbacks.csv_logger.open", new_callable=mock_open)
     def test_append(self, mock_open):
         state = {
             torchbearer.EPOCH: 0,
@@ -69,9 +75,13 @@ class TestCSVLogger(TestCase):
         logger.on_end_epoch(state)
         logger.on_end(state)
 
-        self.assertTrue(mock_open.call_args[0][1] == 'a+')
+        import sys
+        if sys.version_info[0] < 3:
+            self.assertTrue(mock_open.call_args[0][1] == 'ab')
+        else:
+            self.assertTrue(mock_open.call_args[0][1] == 'a')
 
-    @patch("builtins.open", new_callable=mock_open)
+    @patch("torchbearer.callbacks.csv_logger.open", new_callable=mock_open)
     def test_get_field_dict(self, mock_open):
         state = {
             torchbearer.EPOCH: 0,
@@ -92,7 +102,7 @@ class TestCSVLogger(TestCase):
         self.assertDictEqual(logger_fields_dict, correct_fields_dict)
 
     @patch('torchbearer.callbacks.CSVLogger._write_to_dict')
-    @patch("builtins.open", new_callable=mock_open)
+    @patch("torchbearer.callbacks.csv_logger.open", new_callable=mock_open)
     def test_write_on_epoch(self, mock_open, mock_write):
         state = {
             torchbearer.EPOCH: 0,
@@ -106,10 +116,10 @@ class TestCSVLogger(TestCase):
         logger.on_end_epoch(state)
         logger.on_end(state)
 
-        mock_write.assert_called_once()
+        self.assertEqual(mock_write.call_count, 1)
 
     @patch('torchbearer.callbacks.CSVLogger._write_to_dict')
-    @patch("builtins.open", new_callable=mock_open)
+    @patch("torchbearer.callbacks.csv_logger.open", new_callable=mock_open)
     def test_batch_granularity(self, mock_open, mock_write):
         state = {
             torchbearer.EPOCH: 0,

@@ -1,13 +1,11 @@
 import unittest
 
-from unittest.mock import Mock, call
-
+import torch
+from mock import Mock, call
 from torch.autograd import Variable
 
 import torchbearer
-from torchbearer.metrics import Std, Metric, Mean, BatchLambda, EpochLambda, ToDict
-
-import torch
+from torchbearer.metrics import Metric, BatchLambda, EpochLambda, ToDict
 
 
 class TestToDict(unittest.TestCase):
@@ -23,30 +21,44 @@ class TestToDict(unittest.TestCase):
 
     def test_train_process(self):
         self._to_dict.train()
-        self._metric.train.assert_called_once()
+        self.assertEqual(self._metric.train.call_count, 1)
 
         self.assertTrue(self._to_dict.process('input') == {'test': 'process'})
         self._metric.process.assert_called_once_with('input')
 
     def test_train_process_final(self):
         self._to_dict.train()
-        self._metric.train.assert_called_once()
+        self.assertEqual(self._metric.train.call_count, 1)
 
         self.assertTrue(self._to_dict.process_final('input') == {'test': 'process_final'})
         self._metric.process_final.assert_called_once_with('input')
 
     def test_eval_process(self):
         self._to_dict.eval()
-        self._metric.eval.assert_called_once()
+        self.assertEqual(self._metric.eval.call_count, 1)
 
         self.assertTrue(self._to_dict.process('input') == {'val_test': 'process'})
         self._metric.process.assert_called_once_with('input')
 
     def test_eval_process_final(self):
         self._to_dict.eval()
-        self._metric.eval.assert_called_once()
+        self.assertEqual(self._metric.eval.call_count, 1)
 
         self.assertTrue(self._to_dict.process_final('input') == {'val_test': 'process_final'})
+        self._metric.process_final.assert_called_once_with('input')
+
+    def test_eval_train(self):
+        self._to_dict.eval(data_key=torchbearer.TRAIN_DATA)
+        self.assertEqual(self._metric.eval.call_count, 1)
+
+        self.assertTrue(self._to_dict.process_final('input') == {'train_test': 'process_final'})
+        self._metric.process_final.assert_called_once_with('input')
+
+    def test_eval_test(self):
+        self._to_dict.eval(data_key=torchbearer.TEST_DATA)
+        self.assertEqual(self._metric.eval.call_count, 1)
+
+        self.assertTrue(self._to_dict.process_final('input') == {'test_test': 'process_final'})
         self._metric.process_final.assert_called_once_with('input')
 
     def test_reset(self):
@@ -103,7 +115,7 @@ class TestEpochLambda(unittest.TestCase):
         self._metric_function.reset_mock()
         self._metric.process_final({})
 
-        self._metric_function.assert_called_once()
+        self.assertEqual(self._metric_function.call_count, 1)
         self.assertTrue(torch.eq(self._metric_function.call_args_list[0][0][1], torch.LongTensor([0, 1, 2, 3, 4])).all)
         self.assertTrue(torch.lt(torch.abs(torch.add(self._metric_function.call_args_list[0][0][0], -torch.FloatTensor([0.0, 0.1, 0.2, 0.3, 0.4]))), 1e-12).all)
 
@@ -114,7 +126,7 @@ class TestEpochLambda(unittest.TestCase):
         self._metric_function.assert_not_called()
         self._metric.process_final_validate({})
 
-        self._metric_function.assert_called_once()
+        self.assertEqual(self._metric_function.call_count, 1)
         self.assertTrue(torch.eq(self._metric_function.call_args_list[0][0][1], torch.LongTensor([0, 1, 2, 3, 4])).all)
         self.assertTrue(torch.lt(torch.abs(torch.add(self._metric_function.call_args_list[0][0][0], -torch.FloatTensor([0.0, 0.1, 0.2, 0.3, 0.4]))), 1e-12).all)
 

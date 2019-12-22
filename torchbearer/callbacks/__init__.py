@@ -1,82 +1,24 @@
-"""
-..  automodule:: torchbearer.callbacks.callbacks
-        :members:
-        :undoc-members:
-
-Model Checkpointers
-------------------------------------
-
-..  automodule:: torchbearer.callbacks.checkpointers
-        :members:
-        :undoc-members:
-
-Logging
-------------------------------------
-
-..  automodule:: torchbearer.callbacks.csv_logger
-        :members:
-        :undoc-members:
-
-..  automodule:: torchbearer.callbacks.printer
-        :members:
-        :undoc-members:
-
-Tensorboard
-------------------------------------
-
-..  automodule:: torchbearer.callbacks.tensor_board
-        :members:
-        :undoc-members:
-
-Early Stopping
-------------------------------------
-
-..  automodule:: torchbearer.callbacks.early_stopping
-        :members:
-        :undoc-members:
-
-..  automodule:: torchbearer.callbacks.terminate_on_nan
-        :members:
-        :undoc-members:
-
-Gradient Clipping
-------------------------------------
-
-..  automodule:: torchbearer.callbacks.gradient_clipping
-        :members:
-        :undoc-members:
-
-Learning Rate Schedulers
-------------------------------------
-
-..  automodule:: torchbearer.callbacks.torch_scheduler
-        :members:
-        :undoc-members:
-
-Weight Decay
-------------------------------------
-
-..  automodule:: torchbearer.callbacks.weight_decay
-        :members:
-        :undoc-members:
-
-Decorators
-------------------------------------
-
-..  automodule:: torchbearer.callbacks.decorators
-        :members:
-        :undoc-members:
-"""
-
+from torchbearer import Callback
 from .callbacks import *
+from .unpack_state import *
+from .cutout import Cutout, RandomErase, CutMix
+from .lsuv import LSUV
 from .checkpointers import *
 from .csv_logger import *
 from .early_stopping import *
 from .gradient_clipping import *
-from .printer import *
-from .tensor_board import *
+from .printer import ConsolePrinter, Tqdm
+from .tensor_board import TensorBoard, TensorBoardImages, TensorBoardProjector, TensorBoardText
 from .terminate_on_nan import *
 from .torch_scheduler import *
 from .weight_decay import *
 from .aggregate_predictions import *
 from .decorators import *
+from .live_loss_plot import LiveLossPlot
+from . import init
+from . import imaging
+from .pycm import PyCM
+from .mixup import Mixup, MixupAcc
+from .sample_pairing import SamplePairing
+from .label_smoothing import LabelSmoothingRegularisation
+from .between_class import BCPlus
